@@ -31,6 +31,9 @@ func (c *client) ServeDNS(r *request.Request) {
 	m, _, err := c.c.Exchange(r.R, c.config.Addr)
 	if err != nil {
 		log.Printf("serve dns: %v", err)
+
+		m = new(dns.Msg)
+		m.SetRcode(r.R, dns.RcodeServerFailure)
 	}
 	err = r.W.WriteMsg(m)
 	if err != nil {
