@@ -2,11 +2,10 @@ package match
 
 import (
 	"bufio"
-	"bytes"
 	"fmt"
 	"os"
+	"strings"
 
-	iradix "github.com/hashicorp/go-immutable-radix"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/miekg/dns"
@@ -19,8 +18,8 @@ type domainList struct {
 
 	Path string `hcl:"path"`
 
-	r  *iradix.Tree
-	fn func(domain []byte) bool
+	m  map[string]struct{}
+	fn func(domain string) bool
 }
 
 func newDomainList(cfg *Config) (d *domainList, err error) {
@@ -38,29 +37,30 @@ func newDomainList(cfg *Config) (d *domainList, err error) {
 	}
 
 	s := bufio.NewScanner(file)
-	d.r = iradix.New()
+	d.m = make(map[string]struct{})
 
+	var domain string
 	for s.Scan() {
-		domain := dns.Fqdn(s.Text())
+		domain = dns.Fqdn(s.Text())
 
-		d.r, _, _ = d.r.Insert([]byte(domain), nil)
+		d.m[domain] = struct{}{}
 	}
 
 	return d, nil
 }
 
 func (d *domainList) IsMatch(r *request.Request) bool {
-	return d.fn([]byte(r.Name()))
+	return d.fn(r.Name())
 }
 
 func (d *domainList) Name() string {
 	return d.config.Name
 }
 
-func (d *domainList) in(domain []byte) bool {
-	s := bytes.Split(domain, []byte{'.'})
+func (d *domainList) in(domain string) bool {
+	s := strings.Split(domain, ".")
 	for i := 0; i < len(s)-1; i++ {
-		_, ok := d.r.Get(bytes.Join(s[i:], []byte{'.'}))
+		_, ok := d.m[strings.Join(s[i:], ".")]
 		if ok {
 			return true
 		}
@@ -75,7 +75,7 @@ func NewInDomainList(cfg *Config) (m Match, err error) {
 		return nil, fmt.Errorf("new in domain list: %w", err)
 	}
 
-	d.fn = func(domain []byte) bool {
+	d.fn = func(domain string) bool {
 		return d.in(domain)
 	}
 	return d, nil
