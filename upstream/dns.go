@@ -1,8 +1,12 @@
 package upstream
 
 import (
+	"crypto/tls"
+	"fmt"
 	"log"
 
+	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/miekg/dns"
 
 	"github.com/Xuanwo/atomdns/pkg/request"
@@ -10,6 +14,9 @@ import (
 
 type client struct {
 	config *Config
+
+	// DoT related config
+	TLSServerName string `hcl:"tls_server_name,optional"`
 
 	c *dns.Client
 }
@@ -36,6 +43,25 @@ func NewTCPClient(cfg *Config) (u Upstream, err error) {
 	c := &client{config: cfg}
 	c.c = &dns.Client{
 		Net: "tcp",
+	}
+	return c, nil
+}
+
+// NewDoTClient create a new dot client
+func NewDoTClient(cfg *Config) (u Upstream, err error) {
+	c := &client{config: cfg}
+
+	var diags hcl.Diagnostics
+	diags = gohcl.DecodeBody(cfg.Options, nil, c)
+	if diags.HasErrors() {
+		return nil, fmt.Errorf("new domain list: %w", diags)
+	}
+
+	c.c = &dns.Client{
+		Net: "tcp-tls",
+		TLSConfig: &tls.Config{
+			ServerName: "",
+		},
 	}
 	return c, nil
 }
