@@ -2,6 +2,7 @@ package match
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"os"
 
@@ -56,6 +57,17 @@ func (d *domainList) Name() string {
 	return d.config.Name
 }
 
+func (d *domainList) in(domain []byte) bool {
+	s := bytes.Split(domain, []byte{'.'})
+	for i := 0; i < len(s)-1; i++ {
+		_, ok := d.r.Get(bytes.Join(s[i:], []byte{'.'}))
+		if ok {
+			return true
+		}
+	}
+	return false
+}
+
 // NewInDomainList will create a match which return true while request domain is in domain list.
 func NewInDomainList(cfg *Config) (m Match, err error) {
 	d, err := newDomainList(cfg)
@@ -64,8 +76,7 @@ func NewInDomainList(cfg *Config) (m Match, err error) {
 	}
 
 	d.fn = func(domain []byte) bool {
-		_, ok := d.r.Get(domain)
-		return ok
+		return d.in(domain)
 	}
 	return d, nil
 }
