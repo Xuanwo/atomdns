@@ -3,7 +3,6 @@ package match
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"os"
 
 	iradix "github.com/hashicorp/go-immutable-radix"
@@ -43,7 +42,6 @@ func newDomainList(cfg *Config) (d *domainList, err error) {
 	for s.Scan() {
 		domain := dns.Fqdn(s.Text())
 
-		log.Printf("insert name %s", domain)
 		d.r, _, _ = d.r.Insert([]byte(domain), nil)
 	}
 
@@ -66,7 +64,6 @@ func NewInDomainList(cfg *Config) (m Match, err error) {
 	}
 
 	d.fn = func(domain []byte) bool {
-		log.Printf("get domain %s", domain)
 		_, ok := d.r.Get(domain)
 		return ok
 	}
