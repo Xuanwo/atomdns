@@ -1,6 +1,10 @@
 # atomdns
 
-AtomDNS is built for myself.
+AtomDNS is atomic simple DNS server without plugins, all power builtin.
+
+## Status
+
+AtomDNS's config format could be changed at any time before v1.0.0 released.
 
 ## Install
 
