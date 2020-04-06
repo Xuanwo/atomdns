@@ -27,18 +27,13 @@ func (c *client) Name() string {
 }
 
 // ServeDNS implements upstream.ServeDNS
-func (c *client) ServeDNS(r *request.Request) {
-	m, _, err := c.c.Exchange(r.R, c.config.Addr)
+func (c *client) ServeDNS(r *request.Request) (m *dns.Msg, err error) {
+	m, _, err = c.c.Exchange(r.R, c.config.Addr)
 	if err != nil {
 		log.Printf("serve dns: %v", err)
-
-		m = new(dns.Msg)
-		m.SetRcode(r.R, dns.RcodeServerFailure)
+		return nil, err
 	}
-	err = r.W.WriteMsg(m)
-	if err != nil {
-		log.Printf("write msg: %v", err)
-	}
+	return
 }
 
 // NewTCPClient create a new tcp client.

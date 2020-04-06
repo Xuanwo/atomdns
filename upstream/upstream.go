@@ -4,13 +4,14 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/hcl/v2"
+	"github.com/miekg/dns"
 
 	"github.com/Xuanwo/atomdns/pkg/request"
 )
 
 // Upstream will actually handle a dns request.
 type Upstream interface {
-	ServeDNS(r *request.Request)
+	ServeDNS(r *request.Request) (m *dns.Msg, err error)
 
 	Name() string
 }
