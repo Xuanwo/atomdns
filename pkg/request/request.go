@@ -10,7 +10,6 @@ import (
 // Request contains some connection state and is useful in plugin.
 type Request struct {
 	R *dns.Msg
-	W dns.ResponseWriter
 
 	name string // lowercase qname.
 }
@@ -31,4 +30,17 @@ func (r *Request) Name() string {
 
 	r.name = strings.ToLower(dns.Name(r.R.Question[0].Name).String())
 	return r.name
+}
+
+// Type will return this request's type in string.
+func (r *Request) Type() string {
+	if len(r.R.Question) == 0 {
+		return ""
+	}
+	return dns.Type(r.R.Question[0].Qtype).String()
+}
+
+// ID will return the unique ID of this request
+func (r *Request) ID() string {
+	return r.Name() + " " + r.Type()
 }
